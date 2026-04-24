@@ -3,7 +3,7 @@ name: Universal Project Workflow
 
 "on":
   workflow_call:
-    inputs: &universal_inputs
+    inputs:
       runs_on:
         description: "GitHub runner label"
         required: false
@@ -70,8 +70,72 @@ name: Universal Project Workflow
         type: string
         default: build-output
   workflow_dispatch:
-    # Reuse workflow_call input schema to keep both triggers aligned.
-    inputs: *universal_inputs
+    inputs:
+      runs_on:
+        description: "GitHub runner label"
+        required: false
+        type: string
+        default: ubuntu-latest
+      working_directory:
+        description: "Directory where commands will run"
+        required: false
+        type: string
+        default: .
+      node_version:
+        description: "Node.js version (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      python_version:
+        description: "Python version (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      install_command:
+        description: "Install dependencies command"
+        required: false
+        type: string
+        default: ""
+      run_lint:
+        description: "Run lint command"
+        required: false
+        type: boolean
+        default: false
+      lint_command:
+        description: "Lint command"
+        required: false
+        type: string
+        default: ""
+      run_test:
+        description: "Run test command"
+        required: false
+        type: boolean
+        default: false
+      test_command:
+        description: "Test command"
+        required: false
+        type: string
+        default: ""
+      run_build:
+        description: "Run build command"
+        required: false
+        type: boolean
+        default: false
+      build_command:
+        description: "Build command"
+        required: false
+        type: string
+        default: ""
+      artifact_path:
+        description: "Artifact path from repository root (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      artifact_name:
+        description: "Artifact name"
+        required: false
+        type: string
+        default: build-output
 
 permissions:
   contents: read
@@ -85,17 +149,20 @@ jobs:
         run: |
           if [ "${{ inputs.run_lint }}" = "true" ] \
             && [ -z "${{ inputs.lint_command }}" ]; then
-            echo "run_lint=true requires lint_command."
+            echo "Error: run_lint=true but lint_command is empty."
+            echo "Set lint_command or set run_lint=false."
             exit 1
           fi
           if [ "${{ inputs.run_test }}" = "true" ] \
             && [ -z "${{ inputs.test_command }}" ]; then
-            echo "run_test=true requires test_command."
+            echo "Error: run_test=true but test_command is empty."
+            echo "Set test_command or set run_test=false."
             exit 1
           fi
           if [ "${{ inputs.run_build }}" = "true" ] \
             && [ -z "${{ inputs.build_command }}" ]; then
-            echo "run_build=true requires build_command."
+            echo "Error: run_build=true but build_command is empty."
+            echo "Set build_command or set run_build=false."
             exit 1
           fi
 
