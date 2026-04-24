@@ -1,0 +1,215 @@
+---
+name: Universal Project Workflow
+
+"on":
+  workflow_call:
+    inputs:
+      runs_on:
+        description: "GitHub runner label"
+        required: false
+        type: string
+        default: ubuntu-latest
+      working_directory:
+        description: "Directory where commands will run"
+        required: false
+        type: string
+        default: .
+      node_version:
+        description: "Node.js version (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      python_version:
+        description: "Python version (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      install_command:
+        description: "Install dependencies command"
+        required: false
+        type: string
+        default: ""
+      run_lint:
+        description: "Run lint command"
+        required: false
+        type: boolean
+        default: false
+      lint_command:
+        description: "Lint command"
+        required: false
+        type: string
+        default: ""
+      run_test:
+        description: "Run test command"
+        required: false
+        type: boolean
+        default: true
+      test_command:
+        description: "Test command"
+        required: false
+        type: string
+        default: ""
+      run_build:
+        description: "Run build command"
+        required: false
+        type: boolean
+        default: true
+      build_command:
+        description: "Build command"
+        required: false
+        type: string
+        default: ""
+      artifact_path:
+        description: "Artifact path to upload (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      artifact_name:
+        description: "Artifact name"
+        required: false
+        type: string
+        default: build-output
+  workflow_dispatch:
+    inputs:
+      runs_on:
+        description: "GitHub runner label"
+        required: false
+        type: string
+        default: ubuntu-latest
+      working_directory:
+        description: "Directory where commands will run"
+        required: false
+        type: string
+        default: .
+      node_version:
+        description: "Node.js version (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      python_version:
+        description: "Python version (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      install_command:
+        description: "Install dependencies command"
+        required: false
+        type: string
+        default: ""
+      run_lint:
+        description: "Run lint command"
+        required: false
+        type: boolean
+        default: false
+      lint_command:
+        description: "Lint command"
+        required: false
+        type: string
+        default: ""
+      run_test:
+        description: "Run test command"
+        required: false
+        type: boolean
+        default: true
+      test_command:
+        description: "Test command"
+        required: false
+        type: string
+        default: ""
+      run_build:
+        description: "Run build command"
+        required: false
+        type: boolean
+        default: true
+      build_command:
+        description: "Build command"
+        required: false
+        type: string
+        default: ""
+      artifact_path:
+        description: "Artifact path to upload (set empty to skip)"
+        required: false
+        type: string
+        default: ""
+      artifact_name:
+        description: "Artifact name"
+        required: false
+        type: string
+        default: build-output
+
+permissions:
+  contents: read
+
+jobs:
+  validate-inputs:
+    name: Validate Inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate required commands for enabled steps
+        run: |
+          if [ "${{ inputs.run_lint }}" = "true" ] \
+            && [ -z "${{ inputs.lint_command }}" ]; then
+            echo "run_lint is true"
+            echo "but lint_command is empty."
+            exit 1
+          fi
+          if [ "${{ inputs.run_test }}" = "true" ] \
+            && [ -z "${{ inputs.test_command }}" ]; then
+            echo "run_test is true"
+            echo "but test_command is empty."
+            exit 1
+          fi
+          if [ "${{ inputs.run_build }}" = "true" ] \
+            && [ -z "${{ inputs.build_command }}" ]; then
+            echo "run_build is true"
+            echo "but build_command is empty."
+            exit 1
+          fi
+
+  universal-ci:
+    name: Universal CI
+    runs-on: ${{ inputs.runs_on }}
+    needs: validate-inputs
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ inputs.node_version != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+
+      - name: Setup Python
+        if: ${{ inputs.python_version != '' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Install dependencies
+        if: ${{ inputs.install_command != '' }}
+        run: ${{ inputs.install_command }}
+
+      - name: Lint
+        if: ${{ inputs.run_lint }}
+        run: ${{ inputs.lint_command }}
+
+      - name: Test
+        if: ${{ inputs.run_test }}
+        run: ${{ inputs.test_command }}
+
+      - name: Build
+        if: ${{ inputs.run_build }}
+        run: ${{ inputs.build_command }}
+
+      - name: Upload build artifact
+        if: ${{ inputs.artifact_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.artifact_path }}
