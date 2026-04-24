@@ -70,6 +70,7 @@ name: Universal Project Workflow
         type: string
         default: build-output
   workflow_dispatch:
+    # Reuse workflow_call input schema to keep both triggers aligned.
     inputs: *universal_inputs
 
 permissions:

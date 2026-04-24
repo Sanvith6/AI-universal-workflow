@@ -42,3 +42,6 @@ jobs:
 ```
 
 Then edit the `with:` values for your own project stack and commands.
+
+Note: `artifact_path` is resolved from the repository root, even if you set
+`working_directory` to a subfolder.
