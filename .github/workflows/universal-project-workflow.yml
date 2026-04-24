@@ -60,7 +60,7 @@ name: Universal Project Workflow
         type: string
         default: ""
       artifact_path:
-        description: "Artifact path to upload (set empty to skip)"
+        description: "Artifact path from repository root (set empty to skip)"
         required: false
         type: string
         default: ""
@@ -127,7 +127,7 @@ name: Universal Project Workflow
         type: string
         default: ""
       artifact_path:
-        description: "Artifact path to upload (set empty to skip)"
+        description: "Artifact path from repository root (set empty to skip)"
         required: false
         type: string
         default: ""
@@ -183,7 +183,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_version }}
-          cache: npm
 
       - name: Setup Python
         if: ${{ inputs.python_version != '' }}
